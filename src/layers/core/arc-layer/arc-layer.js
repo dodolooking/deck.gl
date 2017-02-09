@@ -27,11 +27,10 @@ import {join} from 'path';
 const DEFAULT_COLOR = [0, 0, 255, 255];
 
 const defaultProps = {
-  strokeWidth: 1,
   getSourcePosition: x => x.sourcePosition,
   getTargetPosition: x => x.targetPosition,
-  getSourceColor: x => x.color,
-  getTargetColor: x => x.color
+  getSourceColor: x => x.color || DEFAULT_COLOR,
+  getTargetColor: x => x.color || DEFAULT_COLOR
 };
 
 export default class ArcLayer extends Layer {
@@ -50,15 +49,7 @@ export default class ArcLayer extends Layer {
   }
 
   draw({uniforms}) {
-    const {gl} = this.context;
-    const lineWidth = this.screenToDevicePixels(this.props.strokeWidth);
-    gl.lineWidth(lineWidth);
     this.state.model.render(uniforms);
-    // Setting line width back to 1 is here to workaround a Google Chrome bug
-    // gl.clear() and gl.isEnabled() will return GL_INVALID_VALUE even with
-    // correct parameter
-    // This is not happening on Safari and Firefox
-    gl.lineWidth(1.0);
   }
 
   getShaders() {
@@ -109,11 +100,11 @@ export default class ArcLayer extends Layer {
     const {value, size} = attribute;
     let i = 0;
     for (const object of data) {
-      const color = getSourceColor(object) || DEFAULT_COLOR;
+      const color = getSourceColor(object);
       value[i + 0] = color[0];
       value[i + 1] = color[1];
       value[i + 2] = color[2];
-      value[i + 3] = isNaN(color[3]) ? DEFAULT_COLOR[3] : color[3];
+      value[i + 3] = color[3] || 255;
       i += size;
     }
   }
@@ -123,11 +114,11 @@ export default class ArcLayer extends Layer {
     const {value, size} = attribute;
     let i = 0;
     for (const object of data) {
-      const color = getTargetColor(object) || DEFAULT_COLOR;
+      const color = getTargetColor(object);
       value[i + 0] = color[0];
       value[i + 1] = color[1];
       value[i + 2] = color[2];
-      value[i + 3] = isNaN(color[3]) ? DEFAULT_COLOR[3] : color[3];
+      value[i + 3] = color[3] || 255;
       i += size;
     }
   }

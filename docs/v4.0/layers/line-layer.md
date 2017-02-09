@@ -13,12 +13,6 @@ Inherits from all [Base Layer](/docs/layers/base-layer.md) properties.
 
 ## Layer-specific Properties
 
-##### `strokeWidth` (Number, optional)
-
-- Default: `1`
-
-The stroke width used to draw each line.
-
 ##### `getSourcePosition` (Function, optional)
 
 - Default: `object => object.sourcePosition`

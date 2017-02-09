@@ -28,7 +28,7 @@ attribute vec4 instanceColors;
 attribute vec3 instancePickingColors;
 
 uniform float opacity;
-uniform float radius;
+uniform float radiusScale;
 uniform float radiusMinPixels;
 uniform float radiusMaxPixels;
 uniform float renderPickingBuffer;
@@ -36,9 +36,9 @@ uniform float renderPickingBuffer;
 varying vec4 vColor;
 
 void main(void) {
-  // Multiply out radius and clamp to limits
+  // Multiply out radiusScale and clamp to limits
   float radiusPixels = clamp(
-    project_scale(radius * instanceRadius),
+    project_scale(radiusScale * instanceRadius),
     radiusMinPixels, radiusMaxPixels
   );
 

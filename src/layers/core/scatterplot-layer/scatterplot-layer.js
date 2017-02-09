@@ -28,13 +28,12 @@ const DEFAULT_COLOR = [255, 0, 255, 255];
 
 const defaultProps = {
   getPosition: x => x.position,
-  getRadius: x => x.radius || 30,
+  getRadius: x => x.radius || 1,
   getColor: x => x.color || DEFAULT_COLOR,
-  radius: 30,  //  point radius in meters
+  radiusScale: 1,  //  point radius in meters
   radiusMinPixels: 0, //  min point radius in pixels
   radiusMaxPixels: Number.MAX_SAFE_INTEGER, // max point radius in pixels
-  drawOutline: false,
-  strokeWidth: 1
+  outline: false
 };
 
 export default class ScatterplotLayer extends Layer {
@@ -52,32 +51,24 @@ export default class ScatterplotLayer extends Layer {
     /* eslint-disable max-len */
     this.state.attributeManager.addInstanced({
       instancePositions: {size: 3, accessor: 'getPosition', update: this.calculateInstancePositions},
-      instanceRadius: {size: 1, accessor: 'getRadius', defaultValue: 1, update: this.calculateInstanceRadius},
+      instanceRadius: {size: 1, accessor: 'getRadius', update: this.calculateInstanceRadius},
       instanceColors: {size: 4, type: GL.UNSIGNED_BYTE, accessor: 'getColor', update: this.calculateInstanceColors}
     });
     /* eslint-enable max-len */
   }
 
   updateState({props, oldProps}) {
-    if (props.drawOutline !== oldProps.drawOutline) {
-      this.state.model.geometry.drawMode = props.drawOutline ? GL.LINE_LOOP : GL.TRIANGLE_FAN;
+    if (props.outline !== oldProps.outline) {
+      this.state.model.geometry.drawMode = props.outline ? GL.LINE_LOOP : GL.TRIANGLE_FAN;
     }
   }
 
   draw({uniforms}) {
-    const {gl} = this.context;
-    const lineWidth = this.screenToDevicePixels(this.props.strokeWidth);
-    gl.lineWidth(lineWidth);
     this.state.model.render(Object.assign({}, uniforms, {
-      radius: this.props.radius,
+      radiusScale: this.props.radiusScale,
       radiusMinPixels: this.props.radiusMinPixels,
       radiusMaxPixels: this.props.radiusMaxPixels
     }));
-    // Setting line width back to 1 is here to workaround a Google Chrome bug
-    // gl.clear() and gl.isEnabled() will return GL_INVALID_VALUE even with
-    // correct parameter
-    // This is not happening on Safari and Firefox
-    gl.lineWidth(1.0);
   }
 
   _getModel(gl) {
@@ -136,11 +127,11 @@ export default class ScatterplotLayer extends Layer {
     const {value} = attribute;
     let i = 0;
     for (const point of data) {
-      const color = getColor(point) || DEFAULT_COLOR;
+      const color = getColor(point);
       value[i++] = color[0];
       value[i++] = color[1];
       value[i++] = color[2];
-      value[i++] = isNaN(color[3]) ? DEFAULT_COLOR[3] : color[3];
+      value[i++] = color[3] || 255;
     }
   }
 }
