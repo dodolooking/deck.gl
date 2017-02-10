@@ -3,6 +3,8 @@ import {Layer, assembleShaders} from 'deck.gl';
 import {Model, Program, Geometry} from 'luma.gl';
 import {readFileSync} from 'fs';
 import {join} from 'path';
+import vertex from './trips-layer-vertex.js';
+import fragment from './trips-layer-fragment.js';
 
 export default class TripsLayer extends Layer {
 
@@ -49,8 +51,8 @@ export default class TripsLayer extends Layer {
   getModel(gl) {
     return new Model({
       program: new Program(gl, assembleShaders(gl, {
-        vs: readFileSync(join(__dirname, './trips-layer-vertex.glsl'), 'utf8'),
-        fs: readFileSync(join(__dirname, './trips-layer-fragment.glsl'), 'utf8')
+        vs: vertex,
+        fs: fragment
       })),
       geometry: new Geometry({
         id: this.props.id,

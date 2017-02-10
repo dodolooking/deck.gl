@@ -13,17 +13,23 @@ export function StreamParser(workerUrl, callback) {
   workers[workerUrl] = workerInstance;
   let streamedData = [];
 
-  workerInstance.onmessage = e => {
+  workerInstance.onmessage = (e)  => {
     const {action, data, meta} = e.data;
     if (action === 'end') {
       workerInstance.terminate();
-    } else if (action === 'add' && data && data.length) {
+    } else if (action === 'add' && e.type !== 'binary' && data && data.length) {
       streamedData = streamedData.concat(data);
       callback(streamedData, meta); // eslint-disable-line callback-return
+    } else if (e.type === 'binary') {
+      debugger;
+      callback(transferable, {binary: 'binary'});
     }
   };
 
   this.onProgress = e => {
+    if (!['text', ''].includes(e.target.responseType)) {
+      return;
+    }
     const {responseText} = e.target;
     const lineBreak = responseText.lastIndexOf('\n') + 1;
 
@@ -36,10 +42,20 @@ export function StreamParser(workerUrl, callback) {
   };
 
   this.onLoad = target => {
-    const {responseText} = target;
-    workerInstance.postMessage({
-      event: 'load',
-      text: responseText.slice(parsedLength)
-    });
+    if (['text', ''].includes(target.responseType)) {
+      const {responseText} = target;
+      workerInstance.postMessage({
+        event: 'load',
+        text: responseText.slice(parsedLength)
+      });
+    } else {
+      const {response} = target;
+      workerInstance.postMessage({
+        event: 'load',
+        type: 'binary',
+        data: response,
+        text: ''
+      }, [response]);      
+    }
   };
 }

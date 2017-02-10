@@ -51,8 +51,11 @@ export const loadData = (owner, dataArr) => {
 
     dispatch(loadDataStart(owner));
 
-    dataArr.forEach(({url, worker}, index) => {
+    dataArr.forEach(({url, worker, type}, index) => {
       const req = request(url);
+      if (type === 'binary') {
+        req.responseType('arraybuffer');
+      }
       const dataParser = new StreamParser(worker, (data, meta) => {
         if (isArray) {
           resultData[index] = data;

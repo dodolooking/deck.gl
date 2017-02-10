@@ -36,6 +36,7 @@ module.exports = {
       webworkify: 'webworkify-webpack-dropin',
       react: resolve('./node_modules/react'),
       'deck.gl': sources,
+      'luma.gl': resolve('./node_modules/luma.gl'),
       'react-dom': resolve('./node_modules/react-dom'),
       'gl-matrix': resolve('./node_modules/gl-matrix/dist/gl-matrix.js')
     }

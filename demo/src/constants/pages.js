@@ -54,6 +54,13 @@ export const examplePages = generatePath([
       demo: 'HeroDemo',
       code: 'code-markdown/trips.md'
     }
+  },
+  {
+    name: 'Wind Demo',
+    content: {
+      demo: 'WindDemo',
+      code: 'code-markdown/trips.md'
+    }
   }
 ]);
 
