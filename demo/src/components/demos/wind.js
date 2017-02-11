@@ -5,6 +5,7 @@ import {ScatterplotLayer} from 'deck.gl';
 import DeckGL from 'deck.gl/react';
 import WindLayer from './wind-layer/wind-layer';
 import DelaunayCoverLayer from './wind-layer/delaunay-cover-layer';
+import ParticleLayer from './wind-layer/particle-layer';
 import DelaunayInterpolation from './wind-layer/delaunay-interpolation';
 
 import {MAPBOX_STYLES} from '../../constants/defaults';
@@ -27,6 +28,7 @@ export default class WindDemo extends Component {
   }
 
   static done(owner, data) {
+    console.log('done');
     const bbox = owner.getBBox(data[0]);
     const triangulation = owner.triangulate(data[0]);
 
@@ -95,14 +97,6 @@ export default class WindDemo extends Component {
 
     const {derived} = data;
     const {triangulation, texData, bbox} = derived;
-    // const bbox = data[0] && this.getBBox(data[0]);
-    // const triangulation = bbox && this.triangulate(data[0]);
-    // const texData = triangulation && data[1] && new DelaunayInterpolation({
-    //   bbox,
-    //   triangulation,
-    //   measures: data[1]
-    // }).generateTextures();
-
     const layers = [].concat(
       data[0] && new ScatterplotLayer({
         id: 'stations',
@@ -120,11 +114,18 @@ export default class WindDemo extends Component {
         id: 'wind',
         bbox,
         texData
+      }),
+      false && data[0] && data[1] && new ParticleLayer({
+        id: 'particles',
+        bbox,
+        texData
       })
     ).filter(Boolean);
 
+    const deckglOpt = {glOptions: {webgl2: true}, ...viewport};
+
     return (
-      <DeckGL {...viewport} layers={ layers } />
+      <DeckGL {...deckglOpt} layers={ layers } />
     );
   }
 

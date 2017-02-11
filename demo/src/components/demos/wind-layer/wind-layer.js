@@ -31,6 +31,7 @@ export default class WindLayer extends Layer {
     return new DelaunayInterpolation({gl})
       .createTexture(gl, {
           data: {
+            internalFormat: gl.RGBA32F,
             format: gl.RGBA,
             value: false,
             type: gl.FLOAT,
@@ -81,7 +82,7 @@ export default class WindLayer extends Layer {
         // upload texture (data) before rendering
         gl.bindTexture(gl.TEXTURE_2D, textureObject);
         gl.activeTexture(gl.TEXTURE0);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[0]);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[0], 0);
 
         model.program.setUniforms({
           bbox: [bbox.minLng, bbox.maxLng, bbox.minLat, bbox.maxLat],

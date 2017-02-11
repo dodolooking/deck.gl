@@ -21,7 +21,7 @@
     "d3-voronoi": "^1.1.1",
     "highlight.js": "^9.7.0",
     "immutable": "^3.7.5",
-    "luma.gl": "3.0.0-alpha.3",
+    "luma.gl": "file:../../luma.gl",
     "marked": "^0.3.6",
     "react": "^15.4.0",
     "react-dom": "^15.4.0",

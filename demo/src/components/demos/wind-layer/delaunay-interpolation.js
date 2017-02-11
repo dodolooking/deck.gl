@@ -21,7 +21,7 @@ export default class DelaunayInterpolation {
       canvas.id = 'texture-canvas';
       canvas.style.display = 'none';
       document.body.appendChild(canvas);
-      this.context = createGLContext({canvas: 'texture-canvas', debug: false});
+      this.context = createGLContext({canvas: 'texture-canvas', debug: false, webgl2: true});
     }
   }
 
@@ -74,9 +74,8 @@ export default class DelaunayInterpolation {
   }
 
   createTexture(gl, options) {
-    // This will be a floating point texture
-    gl.getExtension('OES_texture_float');
-
+    gl.getExtension('EXT_color_buffer_float');
+    
     let opt = Object.assign({
       textureType: gl.TEXTURE_2D,
       pixelStore: [{
@@ -97,6 +96,7 @@ export default class DelaunayInterpolation {
         value: gl.CLAMP_TO_EDGE
       }],
       data: {
+        internalFormat: gl.RGBA32F,
         format: gl.RGBA,
         value: false,
         type: gl.FLOAT,
@@ -116,6 +116,7 @@ export default class DelaunayInterpolation {
         value = data.value,
         type = data.type,
         format = data.format,
+        internalFormat = data.internalFormat,
         hasValue = !!data.value;
 
     gl.bindTexture(textureType, texture);
@@ -126,14 +127,14 @@ export default class DelaunayInterpolation {
     //load texture
     if (hasValue) {
       if ((data.width || data.height) && (!value.width && !value.height)) {
-        gl.texImage2D(textureTarget, 0, format, data.width, data.height, data.border, format, type, value);
+        gl.texImage2D(textureTarget, 0, internalFormat, data.width, data.height, data.border, format, type, value, 0);
       } else {
-        gl.texImage2D(textureTarget, 0, format, format, type, value);
+        gl.texImage2D(textureTarget, 0, internalFormat, format, type, value);
       }
 
     //we're setting a texture to a framebuffer
     } else if (data.width || data.height) {
-      gl.texImage2D(textureTarget, 0, format, data.width, data.height, data.border, format, type, null);
+      gl.texImage2D(textureTarget, 0, internalFormat, data.width, data.height, data.border, format, type, null);
     }
     //set texture parameters
     for (let i = 0; i < parameters.length; i++) {
@@ -207,6 +208,7 @@ export default class DelaunayInterpolation {
           rb: {width, height},
           txt: {
             data: {
+              internalFormat: gl.RGBA32F,
               format: gl.RGBA,
               value: false,
               type: gl.FLOAT,
@@ -272,18 +274,6 @@ export default class DelaunayInterpolation {
         }
       });
 
-      // TODO(nico): one of these calls is useless.
-      delaunayModel.geometry.setAttributes({
-        data: {
-          id: 'data',
-          value: new Float32Array(sample),
-          bytes: Float32Array.BYTES_PER_ELEMENT * sample.length,
-          size: 3,
-          type: gl.FLOAT,
-          isIndexed: false
-        }
-      });
-
       delaunayModel.render({
         bbox: [bbox.minLng, bbox.maxLng, bbox.minLat, bbox.maxLat],
         size: [width, height]
@@ -293,7 +283,7 @@ export default class DelaunayInterpolation {
 
       // read texture back
       const pixels = new Float32Array(width * height * 4);
-      gl.readPixels(0, 0, width, height, gl.RGBA, gl.FLOAT, pixels);
+      gl.readPixels(0, 0, width, height, gl.RGBA, gl.FLOAT, pixels, 0);
 
       // let imageData = new Uint8ClampedArray(width * height * 4);
       // for (let i = 0; i < pixels.length; i+=4) {

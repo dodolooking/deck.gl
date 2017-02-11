@@ -3126,9 +3126,8 @@ lru-cache@^4.0.1:
     pseudomap "^1.0.1"
     yallist "^2.0.0"
 
-luma.gl@3.0.0-alpha.3:
-  version "3.0.0-alpha.3"
-  resolved "https://registry.yarnpkg.com/luma.gl/-/luma.gl-3.0.0-alpha.3.tgz#09d935ecfdb671baa152270a9fa5009dd2e3599c"
+"luma.gl@file:../../luma.gl":
+  version "3.0.0-alpha.4"
   dependencies:
     babel-polyfill "^6.5.0"
     gl-constants "^1.0.0"
