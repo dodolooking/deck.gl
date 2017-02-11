@@ -24,7 +24,7 @@ class Map extends Component {
     const DemoComponent = Demos[demo];
 
     if (DemoComponent) {
-      this.props.loadData(demo, DemoComponent.data);
+      this.props.loadData(demo, DemoComponent.data, DemoComponent);
       this.props.useParams(DemoComponent.parameters);
 
       if (useTransition) {

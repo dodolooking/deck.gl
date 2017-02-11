@@ -5,6 +5,7 @@ import {ScatterplotLayer} from 'deck.gl';
 import DeckGL from 'deck.gl/react';
 import WindLayer from './wind-layer/wind-layer';
 import DelaunayCoverLayer from './wind-layer/delaunay-cover-layer';
+import DelaunayInterpolation from './wind-layer/delaunay-interpolation';
 
 import {MAPBOX_STYLES} from '../../constants/defaults';
 import {readableInteger} from '../../utils/format-utils';
@@ -25,41 +26,22 @@ export default class WindDemo extends Component {
     ];
   }
 
-  static get parameters() {
+  static done(owner, data) {
+    const bbox = owner.getBBox(data[0]);
+    const triangulation = owner.triangulate(data[0]);
+
     return {
-      colorM: {displayName: 'Male', type: 'color', value: '#08f'},
-      colorF: {displayName: 'Female', type: 'color', value: '#f08'},
-      colorN: {displayName: 'Female', type: 'color', value: '#dd3'},
-      radius: {displayName: 'Radius', type: 'number', value: 150, step: 0.1, min: 0.1}
+      bbox,
+      triangulation,
+      texData: new DelaunayInterpolation({
+        bbox,
+        triangulation,
+        measures: data[1]
+      }).generateTextures()
     };
   }
 
-  static get viewport() {
-    return {
-      mapStyle: MAPBOX_STYLES.DARK,
-      longitude: -74,
-      latitude: 40.7,
-      zoom: 11,
-      maxZoom: 16,
-      pitch: 0,
-      bearing: 0
-    };
-  }
-
-  static renderInfo(meta) {
-    return (
-      <div>
-        <h3>Wind</h3>
-        <p>Wind</p>
-        <p>Data source: <a href="http://www.census.gov">US Census Bureau</a></p>
-        <div className="stat">Instances
-          <b>{ readableInteger(meta.size || 0) }</b>
-        </div>
-      </div>
-    );
-  }
-
-  getBBox(data) {
+  static getBBox(data) {
     let minLat =  Infinity;
     let maxLat = -Infinity;
     let minLng =  Infinity;
@@ -75,7 +57,7 @@ export default class WindDemo extends Component {
     return {minLat, minLng, maxLat, maxLng};
   }
 
-  triangulate(data) {
+  static triangulate(data) {
     data.forEach((d, i) => d.index = i);
     return voronoi(data)
             .x(d => -d.long)
@@ -83,16 +65,43 @@ export default class WindDemo extends Component {
             .triangles(data);
   }
 
+  static get parameters() {
+    return {
+      colorM: {displayName: 'Male', type: 'color', value: '#08f'},
+      colorF: {displayName: 'Female', type: 'color', value: '#f08'},
+      colorN: {displayName: 'Female', type: 'color', value: '#dd3'},
+      radius: {displayName: 'Radius', type: 'number', value: 150, step: 0.1, min: 0.1}
+    };
+  }
+
+  static get viewport() {
+    return {
+      mapStyle: MAPBOX_STYLES.DARK,
+      longitude: -100,
+      latitude: 40.7,
+      zoom: 3.8,
+      maxZoom: 16,
+      pitch: 0,
+      bearing: 0
+    };
+  }
+
   render() {
     const {viewport, params, data} = this.props;
 
-    if (!data) {
+    if (!data || !data.derived) {
       return null;
     }
 
-    const bbox = data[0] && this.getBBox(data[0]);
-    const triangulation = bbox && this.triangulate(data[0]);
-
+    const {derived} = data;
+    const {triangulation, texData, bbox} = derived;
+    // const bbox = data[0] && this.getBBox(data[0]);
+    // const triangulation = bbox && this.triangulate(data[0]);
+    // const texData = triangulation && data[1] && new DelaunayInterpolation({
+    //   bbox,
+    //   triangulation,
+    //   measures: data[1]
+    // }).generateTextures();
 
     const layers = [].concat(
       data[0] && new ScatterplotLayer({
@@ -103,21 +112,32 @@ export default class WindDemo extends Component {
         getRadius: d => params.radius.value,
         opacity: 0.2
       }),
-      data[0] && new DelaunayCoverLayer({
+      data[0] && data[1] && new DelaunayCoverLayer({
         id: 'delaunay-cover',
         triangulation
       }),
       data[0] && data[1] && new WindLayer({
         id: 'wind',
-        bbox: bbox,
-        stations: data[0],
-        measures: data[1],
-        triangulation
+        bbox,
+        texData
       })
     ).filter(Boolean);
 
     return (
       <DeckGL {...viewport} layers={ layers } />
+    );
+  }
+
+  static renderInfo(meta) {
+    return (
+      <div>
+        <h3>Wind</h3>
+        <p>Wind</p>
+        <p>Data source: <a href="http://www.census.gov">US Census Bureau</a></p>
+        <div className="stat">Instances
+          <b>{ readableInteger(meta.size || 0) }</b>
+        </div>
+      </div>
     );
   }
 }

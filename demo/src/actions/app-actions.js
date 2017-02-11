@@ -33,7 +33,8 @@ const loadDataSuccess = (owner, data, meta) => ({
   payload: {owner, data, meta}
 });
 
-export const loadData = (owner, dataArr) => {
+
+export const loadData = (owner, dataArr, ownerComponent) => {
 
   return (dispatch, getState) => {
     if (getState().vis.owner === owner) {
@@ -41,13 +42,15 @@ export const loadData = (owner, dataArr) => {
       return;
     }
 
-    let resultData = [];
+    let resultData = {};
     let resultMeta = {};
     const isArray = Array.isArray(dataArr);
 
     if (!isArray) {
       dataArr = [dataArr];
     }
+
+    let count = dataArr.length;
 
     dispatch(loadDataStart(owner));
 
@@ -63,6 +66,12 @@ export const loadData = (owner, dataArr) => {
           resultData = data;
         }
         resultMeta = {...resultMeta, ...meta};
+        count--;
+        if (count === 0) {
+          if (ownerComponent.done) {
+            resultData.derived = ownerComponent.done(ownerComponent, resultData);
+          }
+        }
         dispatch(loadDataSuccess(owner, resultData, resultMeta));
       });
 
