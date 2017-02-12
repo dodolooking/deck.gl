@@ -33,7 +33,7 @@ uniform vec2 bounds2;
 attribute vec3 positions;
 attribute vec4 posFrom;
 
-// varying vec4 vColor;
+varying vec4 vColor;
 
 vec3 getRGB(float h, float s, float v) {
   float c = v * s;
@@ -68,12 +68,14 @@ void main(void) {
   vec2 coord = vec2(x, 1. - y);
   vec4 texel = texture2D(data, coord);
   
+  float wind = (texel.y - bounds1.x) / (bounds1.y - bounds1.x);
+
   vec2 p = preproject(posFrom.xy);
-  gl_PointSize = 4.;
+  gl_PointSize = 3.;
   gl_Position = project(vec4(p, texel.w / HEIGHT_FACTOR, 1.));
-  
+  float alpha = mix(0., 0.7, pow(wind, 0.4));
+
   // temperature in 0-1
-  /*
   float temp = (texel.z - bounds2.x) / (bounds2.y - bounds2.x);  
   float h;
   if (texel.z == 0.) {
@@ -81,7 +83,6 @@ void main(void) {
   } else {
     h = clamp((texel.z - 77.) / 204., 0., 1.) - .3;
   }
-  vColor = mix(vec4(0), vec4(getRGB((1. - temp) * 360., 1., 1.), 1), sign(texel.z));
-  */
+  vColor = vec4(getRGB((1. - temp) * 360., 1., 1.), alpha);
 }
 `;

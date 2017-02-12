@@ -23,6 +23,7 @@ export default `
 
 #define PI2 1.5707963267949
 #define HEIGHT_FACTOR 25.
+#define EPSILON 0.01
 
 uniform sampler2D data;
 uniform vec4 bbox;
@@ -45,14 +46,15 @@ void main(void) {
 
   // wind speed in 0-1
   float wind = (texel.y - bounds1.x) / (bounds1.y - bounds1.x);
-  vec2 offset = vec2(cos(angle), sin(angle)) * wind * .1;
-  vec2 offsetPos = posFrom.xy + offset;
+  vec2 offset = vec2(cos(angle), sin(angle)) * wind * 0.2;
+  vec2 offsetPos = posFrom.xy * .7 + (posFrom.xy + offset) * .3;
 
   vec4 endPos = vec4(offsetPos, posFrom.zw);
 
   // if out of bounds then map to initial position
   // TODO(nico): change this to a random pos in bbox
   endPos.xy = mix(offsetPos, posFrom.zw, float(offsetPos.x < bbox.x || offsetPos.x > bbox.y || offsetPos.y < bbox.z || offsetPos.y > bbox.w));
+  endPos.xy = mix(endPos.xy, posFrom.zw, float(length(offset) < EPSILON));
 
   gl_Position = endPos;
 }

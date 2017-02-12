@@ -7,6 +7,7 @@ import WindLayer from './wind-layer/wind-layer';
 import DelaunayCoverLayer from './wind-layer/delaunay-cover-layer';
 import ParticleLayer from './wind-layer/particle-layer';
 import DelaunayInterpolation from './wind-layer/delaunay-interpolation';
+import ViewportAnimation from '../../utils/map-utils';
 
 import {MAPBOX_STYLES} from '../../constants/defaults';
 import {readableInteger} from '../../utils/format-utils';
@@ -88,6 +89,28 @@ export default class WindDemo extends Component {
     };
   }
 
+  constructor(props) {
+    super(props);
+
+    this.state = {time: 0};
+
+    const thisDemo = this; // eslint-disable-line
+
+    this.tween = ViewportAnimation.ease({time: 0}, {time: 1800}, 60000)
+      .onUpdate(function tweenUpdate() {
+        thisDemo.setState(this); // eslint-disable-line
+      })
+      .repeat(Infinity);
+  }
+
+  componentDidMount() {
+    this.tween.start();
+  }
+
+  componentWillUnmount() {
+    this.tween.stop();
+  }
+
   render() {
     const {viewport, params, data} = this.props;
 
@@ -106,19 +129,19 @@ export default class WindDemo extends Component {
         getRadius: d => params.radius.value,
         opacity: 0.2
       }),
-      data[0] && data[1] && new DelaunayCoverLayer({
-        id: 'delaunay-cover',
-        triangulation
+      data[0] && data[1] && new ParticleLayer({
+        id: 'particles',
+        bbox,
+        texData
       }),
       data[0] && data[1] && new WindLayer({
         id: 'wind',
         bbox,
         texData
       }),
-      false && data[0] && data[1] && new ParticleLayer({
-        id: 'particles',
-        bbox,
-        texData
+      data[0] && data[1] && new DelaunayCoverLayer({
+        id: 'delaunay-cover',
+        triangulation
       })
     ).filter(Boolean);
 
