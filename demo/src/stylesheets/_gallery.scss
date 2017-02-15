@@ -115,7 +115,7 @@
 }
 .options-panel {
   width: 284px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
   margin: 24px;
   padding: 12px 24px;
@@ -127,6 +127,34 @@
     float: left;
     width: 60px;
     margin: 4px;
+  }
+  .input.input-checkbox {
+    float: none;
+    white-space: nowrap;
+
+    & > * {
+      display: inline-block;
+    }
+    
+    input[type=checkbox] {
+      width: 20px;
+      margin: 0 5px 0 0;
+      vertical-align: text-top;
+    }
+  }
+  
+  .input.input-range {
+    float: none;
+
+    & > * {
+      display: block;
+    }
+    
+    input[type=range] {
+      width: 200px;
+      margin: 0 5px 0 0;
+      vertical-align: text-top;
+    }
   }
   label {
     text-transform: uppercase;

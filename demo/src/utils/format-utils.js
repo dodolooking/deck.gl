@@ -1,6 +1,14 @@
 import {rgb} from 'd3-color';
 
 export const normalizeParam = p => {
+  if (p.type === 'checkbox') {
+    return {...p, displayValue: p.checked.toString()};
+  }
+
+  if (['number', 'range'].includes(p.type)) {
+    return {...p, displayValue: Number(p.value)};
+  }
+
   if (p.type !== 'color') {
     return {...p, displayValue: p.value.toString()};
   }

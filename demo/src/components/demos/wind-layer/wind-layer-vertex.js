@@ -22,9 +22,13 @@ export default `
 #define SHADER_NAME wind-layer-vertex-shader
 
 #define PI2 1.5707963267949
+#define PI4 0.78539816339745
 #define HEIGHT_FACTOR 25.
 
-uniform sampler2D data;
+uniform sampler2D dataFrom;
+uniform sampler2D dataTo;
+uniform float delta;
+
 uniform vec4 bbox;
 uniform vec2 size;
 uniform vec2 bounds0;
@@ -66,14 +70,14 @@ void main(void) {
   float x = (positions.x - bbox.x) / (bbox.y - bbox.x);
   float y = (positions.y - bbox.z) / (bbox.w - bbox.z);
   vec2 coord = vec2(x, 1. - y);
-  vec4 texel = texture2D(data, coord);
+  vec4 texel = mix(texture2D(dataFrom, coord), texture2D(dataTo, coord), delta);
   
   // angle
-  float angle = texel.x * PI2;
+  float angle = texel.x * PI4;
 
   // wind speed in 0-1
   float wind = (texel.y - bounds1.x) / (bounds1.y - bounds1.x);
-  vec2 offset = vec2(cos(angle), sin(angle)) * wind * .5;
+  vec2 offset = vec2(cos(angle), sin(angle)) * wind * 2.;
   vec2 p = preproject(positions.xy + mix(vec2(0), offset, positions.z));
   gl_Position = project(vec4(p, texel.w / HEIGHT_FACTOR, 1.));
   

@@ -28,7 +28,18 @@ export default class WindDemo extends Component {
     ];
   }
 
-  static done(owner, data) {
+  static get parameters() {
+    return {
+      toggleParticles: {displayName: 'particles', type: 'checkbox', checked: false},
+      toggleWind: {displayName: 'field', type: 'checkbox', checked: true},
+      toggleElevation: {displayName: 'elevation', type: 'checkbox', checked: true},
+      time: {displayName: 'time (h)', type: 'range', value: 0, min: 0, max: 70, step: 0.1},
+      // colorN: {displayName: 'stations', type: 'color', value: '#dd3'},
+      // radius: {displayName: 'radius', type: 'range', value: 150, step: 0.1, min: 0.1, max: 250}
+    };
+  }
+
+static done(owner, data) {
     console.log('done');
     const bbox = owner.getBBox(data[0]);
     const triangulation = owner.triangulate(data[0]);
@@ -39,7 +50,8 @@ export default class WindDemo extends Component {
       texData: new DelaunayInterpolation({
         bbox,
         triangulation,
-        measures: data[1]
+        measures: data[1],
+        textureWidth: 1024
       }).generateTextures()
     };
   }
@@ -66,15 +78,6 @@ export default class WindDemo extends Component {
             .x(d => -d.long)
             .y(d =>  d.lat)
             .triangles(data);
-  }
-
-  static get parameters() {
-    return {
-      colorM: {displayName: 'Male', type: 'color', value: '#08f'},
-      colorF: {displayName: 'Female', type: 'color', value: '#f08'},
-      colorN: {displayName: 'Female', type: 'color', value: '#dd3'},
-      radius: {displayName: 'Radius', type: 'number', value: 150, step: 0.1, min: 0.1}
-    };
   }
 
   static get viewport() {
@@ -120,26 +123,30 @@ export default class WindDemo extends Component {
 
     const {derived} = data;
     const {triangulation, texData, bbox} = derived;
+
+    // console.log(params.time.value);
     const layers = [].concat(
       data[0] && new ScatterplotLayer({
         id: 'stations',
         data: data[0],
         getPosition: d => [-d.long, d.lat, +d.elv],
-        getColor: d => params.colorN.value,
-        getRadius: d => params.radius.value,
+        getColor: d => [200, 200, 100],
+        getRadius: d => 150,
         opacity: 0.2
       }),
-      data[0] && data[1] && new ParticleLayer({
+      params.toggleParticles.checked && data[0] && data[1] && new ParticleLayer({
         id: 'particles',
         bbox,
-        texData
+        texData,
+        time: params.time.value
       }),
-      data[0] && data[1] && new WindLayer({
+      params.toggleWind.checked && data[0] && data[1] && new WindLayer({
         id: 'wind',
         bbox,
-        texData
+        texData,
+        time: params.time.value
       }),
-      data[0] && data[1] && new DelaunayCoverLayer({
+      params.toggleElevation.checked && data[0] && data[1] && new DelaunayCoverLayer({
         id: 'delaunay-cover',
         triangulation
       })
@@ -156,11 +163,8 @@ export default class WindDemo extends Component {
     return (
       <div>
         <h3>Wind</h3>
-        <p>Wind</p>
-        <p>Data source: <a href="http://www.census.gov">US Census Bureau</a></p>
-        <div className="stat">Instances
-          <b>{ readableInteger(meta.size || 0) }</b>
-        </div>
+        <p>Visualize wind on vector fields and particles.</p>
+        <p>Data source: <a href="http://www.census.gov">NCAA</a></p>
       </div>
     );
   }

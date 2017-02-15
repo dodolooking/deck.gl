@@ -226,7 +226,7 @@ export default class DelaunayInterpolation {
     gl.disable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
 
-    const textures = measures.slice(0, 1).map((measure, hour) => {
+    const textures = measures.map((measure, hour) => {
       let sample = [];      
       gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
       gl.viewport(0, 0, width, height);

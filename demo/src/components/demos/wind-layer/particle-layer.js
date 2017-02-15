@@ -25,9 +25,9 @@ export default class ParticleLayer extends Layer {
     const {gl} = this.context;
     const {attributeManager} = this.state;
     const {bbox, texData} = this.props;
-    const model = this.getModel(gl, bbox, 800, 400, texData);
+    const {model, modelTF} = this.getModel(gl, bbox, 1200, 600, texData);
 
-    this.setState({model, texData});
+    this.setState({model, modelTF, texData});
   }
 
   createTexture(gl, opt) {
@@ -48,7 +48,8 @@ export default class ParticleLayer extends Layer {
     // This will be a grid of elements
     let {dataBounds, textureArray, textureSize} = texData,
         {width, height} = textureSize,
-        textureObject = this.createTexture(gl, {width, height}),
+        textureFrom = this.createTexture(gl, {width, height}),
+        textureTo = this.createTexture(gl, {width, height}),
         diffX = bbox.maxLng - bbox.minLng,
         diffY = bbox.maxLat - bbox.minLat,
         spanX = diffX / (nx - 1),
@@ -57,7 +58,9 @@ export default class ParticleLayer extends Layer {
         dim4 = nx * ny * 4,
         positions3 = new Float32Array(dim3),
         positions4 = new Float32Array(dim4),
-        tf = gl.createTransformFeedback();
+        tf = gl.createTransformFeedback(),
+        timeInt = 0,
+        delta = 0;
 
     // set points
     for (let i = 0; i < nx; ++i) {
@@ -104,9 +107,13 @@ export default class ParticleLayer extends Layer {
           bounds2: [dataBounds[2].min, dataBounds[2].max]
         });
         // upload texture (data) before rendering
-        gl.bindTexture(gl.TEXTURE_2D, textureObject);
+        gl.bindTexture(gl.TEXTURE_2D, textureFrom);
         gl.activeTexture(gl.TEXTURE0);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[0], 0);        
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[modelTF.props && modelTF.props.timeInt || timeInt], 0);
+        
+        gl.bindTexture(gl.TEXTURE_2D, textureTo);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[(modelTF.props && modelTF.props.timeInt || timeInt) + 1], 0);
         // setup transform feedback
         gl.enable(gl.RASTERIZER_DISCARD);
         gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, tf);
@@ -149,9 +156,13 @@ export default class ParticleLayer extends Layer {
           bounds2: [dataBounds[2].min, dataBounds[2].max]
         });
         // upload texture (data) before rendering
-        gl.bindTexture(gl.TEXTURE_2D, textureObject);
+        gl.bindTexture(gl.TEXTURE_2D, textureFrom);
         gl.activeTexture(gl.TEXTURE0);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[0], 0);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[model.props && model.props.timeInt || timeInt], 0);
+        
+        gl.bindTexture(gl.TEXTURE_2D, textureTo);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[(model.props && model.props.timeInt || timeInt) + 1], 0);
         
         let loc = model.program._attributeLocations['posFrom'];
         gl.bindBuffer(gl.ARRAY_BUFFER, bufferTo);
@@ -167,10 +178,24 @@ export default class ParticleLayer extends Layer {
       }
     });
 
-    return model;
+    return {model, modelTF};
   }
 
   updateState({props, oldProps, changeFlags: {dataChanged, somethingChanged}}) {
+    const {time} = this.props;
+    const timeInt = Math.floor(time);
+    const delta = time - timeInt;
+    this.state.model.props = {
+      timeInt,
+      delta
+    };
+    this.state.modelTF.props = {
+      timeInt,
+      delta
+    };
+    this.setUniforms({
+      delta
+    });
   }
 
   countVertices(data) {

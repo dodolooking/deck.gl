@@ -25,11 +25,11 @@ export default handleActions({
     return {...state, params};
   },
   UPDATE_PARAM: (state, action) => {
-    const {name, value} = action.payload;
+    const {name, value, checked, type} = action.payload;
     const newParams = {};
     const p = state.params[name];
     if (p) {
-      newParams[name] = normalizeParam({...p, value});
+      newParams[name] = normalizeParam({...p, value: value, checked: checked});
       return {...state,
         params: {...state.params, ...newParams}
       };
