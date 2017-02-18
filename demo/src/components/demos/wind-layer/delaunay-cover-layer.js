@@ -32,8 +32,7 @@ export default class DelaunayCoverLayer extends Layer {
   getShaders() {
     return {
       vs: vertex,
-      fs: fragment,
-      modules: ['lighting']
+      fs: fragment
     };
   }
 
@@ -69,7 +68,7 @@ export default class DelaunayCoverLayer extends Layer {
 
     /* eslint-disable */
     const shaders = assembleShaders(gl, this.getShaders());
-
+    // let now = Date.now();
     let model = new Model({
       gl,
       id: 'delaunay',
@@ -92,27 +91,29 @@ export default class DelaunayCoverLayer extends Layer {
       }),
       isIndexed: false,
       onBeforeRender: () => {
-        gl.lineWidth(3);
+        // let deltaT = Date.now() - now;
+        // let amp = (Math.sin(deltaT / 2000) + 1) / 2;
+        // let amp2 = (Math.sin(deltaT / 4000) + 1) / 2;
+        // let lng = -122.585 + (-82.5 + 122.585) * amp;
+        // let lat = 50.00 + (25 - 50) * amp2;
+
         model.program.setUniforms({
-          uLightingEnabled: true,
-          uAmbientColor: [255, 255, 255],
-          uPointLightAmbientCoefficient: 0.1,
-          uPointLightLocation: [-97.0000, 38.0000, -100],
-          uPointLightColor: [140, 140, 145],
-          uPointLightAttenuation: 1.0,
-          uMaterialSpecularColor: [25, 25, 25],
-          uMaterialShininess: 1,
+          lightsPosition: [-100, 25, 15000],
+          ambientRatio: 0.2,
+          diffuseRatio: 0.9,
+          specularRatio: 0.2,
+          lightsStrength: [1.0, 0.0],
+          numberOfLights: 2,
           bounds
         });
+        // gl.disable(gl.BLEND);
         gl.enable(gl.BLEND);
-        // gl.enable(gl.POLYGON_OFFSET_FILL);
-        // gl.polygonOffset(2.0, 1.0);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         gl.blendEquation(gl.FUNC_ADD);
       },
       onAfterRender: () => {
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-        // gl.disable(gl.POLYGON_OFFSET_FILL);
+        // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       }
     });
 

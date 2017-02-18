@@ -24,6 +24,7 @@ export default `
 #define PI2 1.5707963267949
 #define PI4 0.78539816339745
 #define HEIGHT_FACTOR 25.
+#define ELEVATION_SCALE 80.
 
 uniform sampler2D dataFrom;
 uniform sampler2D dataTo;
@@ -36,7 +37,11 @@ uniform vec2 bounds1;
 uniform vec2 bounds2;
 
 attribute vec3 positions;
+attribute vec3 vertices;
+attribute vec3 normals;
 
+varying vec4 vPosition;
+varying vec4 vNormal;
 varying vec4 vColor;
 
 vec3 getRGB(float h, float s, float v) {
@@ -65,7 +70,6 @@ vec3 getRGB(float h, float s, float v) {
 }
 
 void main(void) {
-
   // position in texture coords
   float x = (positions.x - bbox.x) / (bbox.y - bbox.x);
   float y = (positions.y - bbox.z) / (bbox.w - bbox.z);
@@ -74,21 +78,25 @@ void main(void) {
   
   // angle
   float angle = texel.x * PI4;
+  mat2 rotation = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
 
   // wind speed in 0-1
   float wind = (texel.y - bounds1.x) / (bounds1.y - bounds1.x);
-  vec2 offset = vec2(cos(angle), sin(angle)) * wind * 2.;
-  vec2 p = preproject(positions.xy + mix(vec2(0), offset, positions.z));
-  gl_Position = project(vec4(p, texel.w / HEIGHT_FACTOR, 1.));
-  
+  float factor = wind * 3.;
+  vec2 vertex = rotation * vertices.xy;
+  vec2 normal = rotation * normals.xy;
+  vec2 pos = project_position(positions.xy + vertex.xy * factor);
+  float elevation = project_scale((vertices.z + texel.w) * ELEVATION_SCALE);
+  vec3 extrudedPosition = vec3(pos.xy, elevation + 1.0);
+  vec4 position_worldspace = vec4(extrudedPosition, 1.0);
+  gl_Position = project_to_clipspace(position_worldspace);
+
+  float lightWeight = 1.0;
   // temperature in 0-1
   float temp = (texel.z - bounds2.x) / (bounds2.y - bounds2.x);  
-  float h;
-  if (texel.z == 0.) {
-    h = 150.;
-  } else {
-    h = clamp((texel.z - 77.) / 204., 0., 1.) - .3;
-  }
-  vColor = mix(vec4(0), vec4(getRGB((1. - temp) * 360., 1., 1.), 1), sign(texel.z));
+  vPosition = position_worldspace;
+  vNormal = vec4(normal, normals.z, 1);
+  float wheel = floor((1. - temp) * 360. / 40.) * 40.;
+  vColor = vec4(getRGB(wheel, 1., 1.), 1);
 }
 `;

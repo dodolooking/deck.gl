@@ -51,7 +51,7 @@ static done(owner, data) {
         bbox,
         triangulation,
         measures: data[1],
-        textureWidth: 1024
+        textureWidth: 512
       }).generateTextures()
     };
   }
@@ -134,7 +134,7 @@ static done(owner, data) {
         getRadius: d => 150,
         opacity: 0.2
       }),
-      params.toggleParticles.checked && data[0] && data[1] && new ParticleLayer({
+      false && params.toggleParticles.checked && data[0] && data[1] && new ParticleLayer({
         id: 'particles',
         bbox,
         texData,

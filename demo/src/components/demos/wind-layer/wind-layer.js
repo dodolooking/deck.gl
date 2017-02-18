@@ -22,8 +22,7 @@ export default class WindLayer extends Layer {
     const {gl} = this.context;
     const {attributeManager} = this.state;
     const {bbox, texData, time} = this.props;
-    console.log('model', time);
-    const model = this.getModel(gl, bbox, 200, 100, texData);
+    const model = this.getModel(gl, bbox, 100, 50, texData);
 
     this.setState({model, texData});
   }
@@ -43,6 +42,10 @@ export default class WindLayer extends Layer {
         });
   }
 
+  getNumInstances() {
+    return this.state.numInstances;
+  }
+
   getModel(gl, bbox, nx, ny, texData) {
     // This will be a grid of elements
     let {dataBounds, textureArray, textureSize} = texData,
@@ -53,21 +56,20 @@ export default class WindLayer extends Layer {
         diffY = bbox.maxLat - bbox.minLat,
         spanX = diffX / (nx - 1),
         spanY = diffY / (ny - 1),
-        positions = new Float32Array(nx * ny * 3 * 2),
+        positions = new Float32Array(nx * ny * 3),
+        instances = nx * ny,
         timeInt = 0,
         delta = 0;
+
+    this.state.numInstances = instances;
     // build lines for the vector field
     // TODO(nico): this should be computed only once
     for (let i = 0; i < nx; ++i) {
       for (let j = 0; j < ny; ++j) {
-        let index = (i + j * nx) * 3 * 2;
+        let index = (i + j * nx) * 3;
         positions[index + 0] = i * spanX + bbox.minLng;
         positions[index + 1] = j * spanY + bbox.minLat;
         positions[index + 2] = 0;
-        
-        positions[index + 3] = i * spanX + bbox.minLng;
-        positions[index + 4] = j * spanY + bbox.minLat;
-        positions[index + 5] = 1;
       }
     }
 
@@ -76,21 +78,43 @@ export default class WindLayer extends Layer {
         vs: vertex,
         fs: fragment
       })),
+      isIndexed: false,
+      isInstanced: true,
       geometry: new Geometry({
         id: this.props.id,
-        drawMode: 'LINES',
-        positions
+        drawMode: 'TRIANGLE_FAN',
+        isInstanced: true,
+        instanceCount: 1,
+        attributes: {
+          positions: {
+            value: positions,
+            instanced: 1,
+            type: gl.FLOAT,
+            size: 3
+          },
+          vertices: {
+            value: new Float32Array([0.3, 0, 250, 0, 0.10, 0, 1, 0, 0, 0, -0.10, 0, 0, 0.10, 0]),
+            size: 3,
+            type: gl.FLOAT
+          },
+          normals: {
+            value: new Float32Array([0, 0, 1    , 0, 0.10, 0, 1, 0, 0, 0, -0.10, 0, 0, 0.10, 0]),
+            size: 3,
+            type: gl.FLOAT
+          }
+        }
       }),
-      isIndexed: false,
       onBeforeRender: () => {
         // upload texture (data) before rendering
         gl.bindTexture(gl.TEXTURE_2D, textureFrom);
         gl.activeTexture(gl.TEXTURE0);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[model.props && model.props.timeInt || timeInt], 0);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT,
+         textureArray[model.props && model.props.timeInt || timeInt], 0);
         
         gl.bindTexture(gl.TEXTURE_2D, textureTo);
         gl.activeTexture(gl.TEXTURE1);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[(model.props && model.props.timeInt || timeInt) + 1], 0);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT,
+        textureArray[(model.props && model.props.timeInt || timeInt) + 1], 0);
 
         model.program.setUniforms({
           bbox: [bbox.minLng, bbox.maxLng, bbox.minLat, bbox.maxLat],
@@ -98,9 +122,17 @@ export default class WindLayer extends Layer {
           delta: (model.props && model.props.delta || delta),
           bounds0: [dataBounds[0].min, dataBounds[0].max],
           bounds1: [dataBounds[1].min, dataBounds[1].max],
-          bounds2: [dataBounds[2].min, dataBounds[2].max]
+          bounds2: [dataBounds[2].min, dataBounds[2].max],
+          lightsPosition: [-98.585, 38.00, 10000],
+          ambientRatio: 0.9,
+          diffuseRatio: 0.8,
+          specularRatio: 0.9,
+          lightsStrength: [1.0, 0.0],
+          numberOfLights: 2
         });
-        gl.lineWidth(8);
+        gl.clearDepth(1.0);
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LEQUAL);
       },
       onAfterRender: () => {
         gl.bindTexture(gl.TEXTURE_2D, null);

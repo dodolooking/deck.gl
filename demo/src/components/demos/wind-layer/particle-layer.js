@@ -63,6 +63,7 @@ export default class ParticleLayer extends Layer {
         delta = 0;
 
     // set points
+    // TODO(nico): move to static
     for (let i = 0; i < nx; ++i) {
       for (let j = 0; j < ny; ++j) {
         let index4 = (i + j * nx) * 4;
@@ -109,11 +110,13 @@ export default class ParticleLayer extends Layer {
         // upload texture (data) before rendering
         gl.bindTexture(gl.TEXTURE_2D, textureFrom);
         gl.activeTexture(gl.TEXTURE0);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[modelTF.props && modelTF.props.timeInt || timeInt], 0);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, 
+          textureArray[modelTF.props && modelTF.props.timeInt || timeInt], 0);
         
         gl.bindTexture(gl.TEXTURE_2D, textureTo);
         gl.activeTexture(gl.TEXTURE1);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[(modelTF.props && modelTF.props.timeInt || timeInt) + 1], 0);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT,
+         textureArray[(modelTF.props && modelTF.props.timeInt || timeInt) + 1], 0);
         // setup transform feedback
         gl.enable(gl.RASTERIZER_DISCARD);
         gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, tf);
@@ -153,7 +156,10 @@ export default class ParticleLayer extends Layer {
           bbox: [bbox.minLng, bbox.maxLng, bbox.minLat, bbox.maxLat],
           bounds0: [dataBounds[0].min, dataBounds[0].max],
           bounds1: [dataBounds[1].min, dataBounds[1].max],
-          bounds2: [dataBounds[2].min, dataBounds[2].max]
+          bounds2: [dataBounds[2].min, dataBounds[2].max],
+          color0: [83, 185, 148].map(d => d / 255),
+          color1: [255, 255, 174].map(d => d / 255),
+          color2: [241, 85, 46].map(d => d / 255)
         });
         // upload texture (data) before rendering
         gl.bindTexture(gl.TEXTURE_2D, textureFrom);

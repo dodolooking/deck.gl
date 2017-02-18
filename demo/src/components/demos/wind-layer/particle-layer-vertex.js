@@ -78,12 +78,17 @@ void main(void) {
   float alpha = mix(0., 0.7, pow(wind, .7));
 
   // temperature in 0-1
+  // temperature in 0-1
   float temp = (texel.z - bounds2.x) / (bounds2.y - bounds2.x);  
-  float h;
-  if (texel.z == 0.) {
-    h = 150.;
-  } else {
-    h = clamp((texel.z - 77.) / 204., 0., 1.) - .3;
+  vec3 color;
+  if (temp <= 0.25) {
+    color = color0;
+  }
+  if (temp > 0.25 && temp <= 0.5) {
+    color = color1;
+  }
+  if (temp > 0.5 && temp <= 1.) {
+    color = color2;
   }
   vColor = vec4(getRGB((1. - temp) * 360., 1., 1.), alpha);
 }
