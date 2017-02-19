@@ -74,11 +74,13 @@ void main(void) {
   float x = (positions.x - bbox.x) / (bbox.y - bbox.x);
   float y = (positions.y - bbox.z) / (bbox.w - bbox.z);
   vec2 coord = vec2(x, 1. - y);
-  vec4 texel = mix(texture2D(dataFrom, coord), texture2D(dataTo, coord), delta);
+  vec4 texel1 = texture2D(dataFrom, coord);
+  vec4 texel2 = texture2D(dataTo, coord);
+  vec4 texel = mix(texel1, texel2, 1. - delta);
   
   // angle
   float angle = texel.x * PI4;
-  mat2 rotation = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+  mat2 rotation = mat2(cos(angle), sin(angle), -sin(angle), cos(angle));
 
   // wind speed in 0-1
   float wind = (texel.y - bounds1.x) / (bounds1.y - bounds1.x);
@@ -96,7 +98,9 @@ void main(void) {
   float temp = (texel.z - bounds2.x) / (bounds2.y - bounds2.x);  
   vPosition = position_worldspace;
   vNormal = vec4(normal, normals.z, 1);
+  temp = floor(temp * 3.) / 3.;
   float wheel = floor((1. - temp) * 360. / 40.) * 40.;
-  vColor = vec4(getRGB(wheel, 1., 1.), 1);
+  vColor = vec4((1. - vec3(3. * temp, 0.25, 0.4)), 1);
+  // vColor = vec4(getRGB(wheel, 1., 1.), 1);
 }
 `;

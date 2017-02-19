@@ -22,6 +22,7 @@ export default `
 #define SHADER_NAME wind-layer-vertex-shader
 
 #define HEIGHT_FACTOR 25.
+#define ELEVATION_SCALE 80.
 
 uniform sampler2D dataFrom;
 uniform sampler2D dataTo;
@@ -35,6 +36,7 @@ uniform vec2 bounds2;
 
 attribute vec3 positions;
 attribute vec4 posFrom;
+attribute vec3 vertices;
 
 varying vec4 vColor;
 
@@ -70,26 +72,22 @@ void main(void) {
   vec2 coord = vec2(x, 1. - y);
   vec4 texel = mix(texture2D(dataFrom, coord), texture2D(dataTo, coord), delta);
   
-  float wind = (texel.y - bounds1.x) / (bounds1.y - bounds1.x);
+  float wind = (texel.y - bounds1.x) / (bounds1.y - bounds1.x) * 2.;
 
   vec2 p = preproject(posFrom.xy);
-  gl_PointSize = 3.5;
-  gl_Position = project(vec4(p, texel.w / HEIGHT_FACTOR, 1.));
-  float alpha = mix(0., 0.7, pow(wind, .7));
+  gl_PointSize = 2.;
+  vec2 pos = project_position(posFrom.xy);
+  float elevation = project_scale((texel.w + 100.) * ELEVATION_SCALE);
+  vec3 extrudedPosition = vec3(pos.xy, elevation + 1.0);
+  vec4 position_worldspace = vec4(extrudedPosition, 1.0);
+  gl_Position = project_to_clipspace(position_worldspace);
 
-  // temperature in 0-1
+  float alpha = mix(0., 0.8, pow(wind, .7));
   // temperature in 0-1
   float temp = (texel.z - bounds2.x) / (bounds2.y - bounds2.x);  
-  vec3 color;
-  if (temp <= 0.25) {
-    color = color0;
-  }
-  if (temp > 0.25 && temp <= 0.5) {
-    color = color1;
-  }
-  if (temp > 0.5 && temp <= 1.) {
-    color = color2;
-  }
-  vColor = vec4(getRGB((1. - temp) * 360., 1., 1.), alpha);
+  temp = floor(temp * 3.) / 3.;
+  // float wheel = floor((1. - temp) * 360. / 40.) * 40.;
+  vColor = vec4((1. - vec3(3. * temp, 0.25, 0.4)), alpha);
+//  vColor = vec4(alpha);
 }
 `;

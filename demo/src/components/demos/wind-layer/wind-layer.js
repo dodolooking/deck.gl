@@ -98,23 +98,19 @@ export default class WindLayer extends Layer {
             type: gl.FLOAT
           },
           normals: {
-            value: new Float32Array([0, 0, 1    , 0, 0.10, 0, 1, 0, 0, 0, -0.10, 0, 0, 0.10, 0]),
+            value: new Float32Array([0, 0, 1, 0, 0.10, 0, 1, 0, 0, 0, -0.10, 0, 0, 0.10, 0]),
             size: 3,
             type: gl.FLOAT
           }
         }
       }),
       onBeforeRender: () => {
-        // upload texture (data) before rendering
-        gl.bindTexture(gl.TEXTURE_2D, textureFrom);
-        gl.activeTexture(gl.TEXTURE0);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT,
-         textureArray[model.props && model.props.timeInt || timeInt], 0);
-        
-        gl.bindTexture(gl.TEXTURE_2D, textureTo);
-        gl.activeTexture(gl.TEXTURE1);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT,
-        textureArray[(model.props && model.props.timeInt || timeInt) + 1], 0);
+        // console.log(
+        //   model.props && model.props.timeInt || timeInt,
+        //   (model.props && model.props.timeInt || timeInt) + 1,
+        //   (model.props && model.props.delta || delta)
+        // );
+//        console.log(textureArray[(model.props && model.props.timeInt || timeInt) + 1]);
 
         model.program.setUniforms({
           bbox: [bbox.minLng, bbox.maxLng, bbox.minLat, bbox.maxLat],
@@ -123,13 +119,28 @@ export default class WindLayer extends Layer {
           bounds0: [dataBounds[0].min, dataBounds[0].max],
           bounds1: [dataBounds[1].min, dataBounds[1].max],
           bounds2: [dataBounds[2].min, dataBounds[2].max],
-          lightsPosition: [-98.585, 38.00, 10000],
+          lightsPosition: [-70.585, 38.00, 15000],
           ambientRatio: 0.9,
           diffuseRatio: 0.8,
           specularRatio: 0.9,
           lightsStrength: [1.0, 0.0],
-          numberOfLights: 2
+          numberOfLights: 2,
+          dataFrom: 0,
+          dataTo: 1
         });
+
+        // upload texture (data) before rendering
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, textureFrom);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT,
+          textureArray[(model.props && model.props.timeInt || timeInt) + 1], 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, textureTo);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT,
+         textureArray[model.props && model.props.timeInt || timeInt], 0);
+
         gl.clearDepth(1.0);
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl.LEQUAL);
@@ -150,9 +161,9 @@ export default class WindLayer extends Layer {
       timeInt,
       delta
     };
-    this.setUniforms({
-      delta
-    });
+    // this.setUniforms({
+    //   delta
+    // });
   }
 
   countVertices(data) {

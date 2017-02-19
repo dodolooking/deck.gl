@@ -91,12 +91,6 @@ export default class DelaunayCoverLayer extends Layer {
       }),
       isIndexed: false,
       onBeforeRender: () => {
-        // let deltaT = Date.now() - now;
-        // let amp = (Math.sin(deltaT / 2000) + 1) / 2;
-        // let amp2 = (Math.sin(deltaT / 4000) + 1) / 2;
-        // let lng = -122.585 + (-82.5 + 122.585) * amp;
-        // let lat = 50.00 + (25 - 50) * amp2;
-
         model.program.setUniforms({
           lightsPosition: [-100, 25, 15000],
           ambientRatio: 0.2,

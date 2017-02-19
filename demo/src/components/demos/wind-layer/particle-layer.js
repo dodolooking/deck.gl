@@ -62,8 +62,9 @@ export default class ParticleLayer extends Layer {
         timeInt = 0,
         delta = 0;
 
+    this.state.numInstances = nx * ny;
+
     // set points
-    // TODO(nico): move to static
     for (let i = 0; i < nx; ++i) {
       for (let j = 0; j < ny; ++j) {
         let index4 = (i + j * nx) * 4;
@@ -97,15 +98,26 @@ export default class ParticleLayer extends Layer {
       geometry: new Geometry({
         id: this.props.id,
         drawMode: 'POINTS',
-        positions: positions3
+        isInstanced: false,
+        attributes: {
+          positions: {
+            value: positions3,
+            type: gl.FLOAT,
+            size: 3
+          }
+        }
       }),
+      isIndexed: false,
+      isInstanced: false,
       onBeforeRender: () => {
         // set uniforms
         modelTF.program.setUniforms({
           bbox: [bbox.minLng, bbox.maxLng, bbox.minLat, bbox.maxLat],
           bounds0: [dataBounds[0].min, dataBounds[0].max],
           bounds1: [dataBounds[1].min, dataBounds[1].max],
-          bounds2: [dataBounds[2].min, dataBounds[2].max]
+          bounds2: [dataBounds[2].min, dataBounds[2].max],
+          dataFrom: 0,
+          dataTo: 1
         });
         // upload texture (data) before rendering
         gl.bindTexture(gl.TEXTURE_2D, textureFrom);
@@ -134,8 +146,7 @@ export default class ParticleLayer extends Layer {
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         gl.disable(gl.RASTERIZER_DISCARD);
         gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
-      },
-      isIndexed: false
+      }
     });
 
     const model = new Model({
@@ -146,9 +157,24 @@ export default class ParticleLayer extends Layer {
       geometry: new Geometry({
         id: this.props.id,
         drawMode: 'POINTS',
-        positions: positions3
+        // instanceCount: 1,
+        // isInstanced: true,
+        attributes: {
+          positions: {
+            value: positions3,
+            // instanced: 1,
+            type: gl.FLOAT,
+            size: 3
+          },
+          vertices: {
+            value: positions3,//new Float32Array([1, 1, 1]),
+            size: 3,
+            type: gl.FLOAT
+          }
+        }
       }),
       isIndexed: false,
+      // isInstanced: true,
       onBeforeRender: () => {
         modelTF.render();
         model.setProgramState();
@@ -159,8 +185,12 @@ export default class ParticleLayer extends Layer {
           bounds2: [dataBounds[2].min, dataBounds[2].max],
           color0: [83, 185, 148].map(d => d / 255),
           color1: [255, 255, 174].map(d => d / 255),
-          color2: [241, 85, 46].map(d => d / 255)
+          color2: [241, 85, 46].map(d => d / 255),
+          dataFrom: 0,
+          dataTo: 1
         });
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
         // upload texture (data) before rendering
         gl.bindTexture(gl.TEXTURE_2D, textureFrom);
         gl.activeTexture(gl.TEXTURE0);
@@ -175,8 +205,13 @@ export default class ParticleLayer extends Layer {
         gl.enableVertexAttribArray(loc);
         gl.vertexAttribPointer(loc, 4, gl.FLOAT, gl.FALSE, 0, 0);
         gl.vertexAttribDivisor(loc, 0);
+        // gl.bindBuffer(gl.ARRAY_BUFFER, null);
       },
       onAfterRender: () => {
+        // let loc = model.program._attributeLocations['posFrom'];
+        // gl.bindBuffer(gl.ARRAY_BUFFER, bufferTo);
+        // gl.vertexAttribDivisor(loc, 0);
+        // gl.bindBuffer(gl.ARRAY_BUFFER, null);
         // swap buffers
         bufferSwap = bufferFrom;
         bufferFrom = bufferTo;
@@ -202,6 +237,10 @@ export default class ParticleLayer extends Layer {
     this.setUniforms({
       delta
     });
+  }
+
+  getNumInstances() {
+    return this.state.numInstances;
   }
 
   countVertices(data) {

@@ -123,7 +123,6 @@ static done(owner, data) {
 
     const {derived} = data;
     const {triangulation, texData, bbox} = derived;
-
     // console.log(params.time.value);
     const layers = [].concat(
       data[0] && new ScatterplotLayer({
@@ -134,7 +133,7 @@ static done(owner, data) {
         getRadius: d => 150,
         opacity: 0.2
       }),
-      false && params.toggleParticles.checked && data[0] && data[1] && new ParticleLayer({
+      params.toggleParticles.checked && data[0] && data[1] && new ParticleLayer({
         id: 'particles',
         bbox,
         texData,
