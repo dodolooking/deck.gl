@@ -51,7 +51,7 @@ static done(owner, data) {
         bbox,
         triangulation,
         measures: data[1],
-        textureWidth: 512
+        textureWidth: 1024
       }).generateTextures()
     };
   }

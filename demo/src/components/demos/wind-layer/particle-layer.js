@@ -54,29 +54,32 @@ export default class ParticleLayer extends Layer {
         diffY = bbox.maxLat - bbox.minLat,
         spanX = diffX / (nx - 1),
         spanY = diffY / (ny - 1),
-        dim3 = nx * ny * 3,
-        dim4 = nx * ny * 4,
+        dim = nx * ny,
+        dim3 = dim * 3,
+        dim4 = dim * 4,
         positions3 = new Float32Array(dim3),
         positions4 = new Float32Array(dim4),
         tf = gl.createTransformFeedback(),
         timeInt = 0,
-        delta = 0;
+        delta = 0,
+        randLng = () => (bbox.maxLng - bbox.minLng) * Math.random() + bbox.minLng,
+        randLat = () => (bbox.maxLat - bbox.minLat) * Math.random() + bbox.minLat;
 
-    this.state.numInstances = nx * ny;
+    this.state.numInstances = dim;
 
     // set points
     for (let i = 0; i < nx; ++i) {
       for (let j = 0; j < ny; ++j) {
         let index4 = (i + j * nx) * 4;
         let index3 = (i + j * nx) * 3;
-        positions3[index3 + 0] = (bbox.maxLng - bbox.minLng) * Math.random() + bbox.minLng;
-        positions3[index3 + 1] = (bbox.maxLat - bbox.minLat) * Math.random() + bbox.minLat;
-        positions3[index3 + 2] = 0;
+        positions3[index3 + 0] = randLng();
+        positions3[index3 + 1] = randLat();
+        positions3[index3 + 2] = i + j * nx;
 
         positions4[index4 + 0] = i * spanX + bbox.minLng;
         positions4[index4 + 1] = j * spanY + bbox.minLat;
-        positions4[index4 + 2] = (bbox.maxLng - bbox.minLng) * Math.random() + bbox.minLng;
-        positions4[index4 + 3] = (bbox.maxLat - bbox.minLat) * Math.random() + bbox.minLat;
+        positions4[index4 + 2] = i + j * nx;
+        positions4[index4 + 3] = randLat();
       }
     }
 
@@ -89,6 +92,8 @@ export default class ParticleLayer extends Layer {
     gl.bufferData(gl.ARRAY_BUFFER, 4 * positions4.length, gl.DYNAMIC_COPY);
     
     let bufferSwap;
+    let now = Date.now();
+    let counter = 0;
 
     const modelTF = new Model({
         program: new ProgramTransformFeedback(gl, assembleShaders(gl, {
@@ -110,6 +115,13 @@ export default class ParticleLayer extends Layer {
       isIndexed: false,
       isInstanced: false,
       onBeforeRender: () => {
+        let time = Date.now() - now;
+        let flip = time > 100 ? 1 : -1;
+        if (flip > 0) {
+          counter = (counter + 1) % dim;
+          flip = counter;
+          console.log(flip);
+        }
         // set uniforms
         modelTF.program.setUniforms({
           bbox: [bbox.minLng, bbox.maxLng, bbox.minLat, bbox.maxLat],
@@ -117,18 +129,24 @@ export default class ParticleLayer extends Layer {
           bounds1: [dataBounds[1].min, dataBounds[1].max],
           bounds2: [dataBounds[2].min, dataBounds[2].max],
           dataFrom: 0,
-          dataTo: 1
+          dataTo: 1,
+          time: time,
+          flip
         });
+
+        if (flip > 0) {
+          flip = -1;
+          now = Date.now();
+        }
+
         // upload texture (data) before rendering
         gl.bindTexture(gl.TEXTURE_2D, textureFrom);
         gl.activeTexture(gl.TEXTURE0);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, 
-          textureArray[modelTF.props && modelTF.props.timeInt || timeInt], 0);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[model.props && model.props.timeInt || timeInt], 0);
         
         gl.bindTexture(gl.TEXTURE_2D, textureTo);
         gl.activeTexture(gl.TEXTURE1);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT,
-         textureArray[(modelTF.props && modelTF.props.timeInt || timeInt) + 1], 0);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[(model.props && model.props.timeInt || timeInt) + 1], 0);
         // setup transform feedback
         gl.enable(gl.RASTERIZER_DISCARD);
         gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, tf);

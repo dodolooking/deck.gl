@@ -53,6 +53,7 @@ void main(void) {
 
   vPosition = position_worldspace;
   vNormal = vec4(normal, 1);
-  vColor = vec4(1, 0.25, 0.4, (positions.z - bounds.x) / (bounds.y - bounds.x));
+  // vColor = vec4(1, 0.25, 0.4, (positions.z - bounds.x) / (bounds.y - bounds.x));
+  vColor = vec4(15./70., 26./70., 36./70., (positions.z - bounds.x) / (bounds.y - bounds.x));
 }
 `;

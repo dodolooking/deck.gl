@@ -30,6 +30,7 @@ uniform sampler2D dataFrom;
 uniform sampler2D dataTo;
 uniform float delta;
 
+uniform float flip;
 uniform vec4 bbox;
 uniform vec2 bounds0;
 uniform vec2 bounds1;
@@ -37,6 +38,10 @@ uniform vec2 bounds2;
 
 attribute vec3 positions;
 attribute vec4 posFrom;
+
+float rand(vec2 co){
+  return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
 
 void main(void) {
   // position in texture coords
@@ -57,8 +62,17 @@ void main(void) {
 
   // if out of bounds then map to initial position
   // TODO(nico): change this to a random pos in bbox
-  endPos.xy = mix(offsetPos, posFrom.zw, float(offsetPos.x < bbox.x || offsetPos.x > bbox.y || offsetPos.y < bbox.z || offsetPos.y > bbox.w));
-  endPos.xy = mix(endPos.xy, posFrom.zw, float(length(offset) < EPSILON));
+  // vec2 randValues = vec2(randLng, randLat);
+  float r1 = rand(vec2(posFrom.z, offsetPos.x));
+  float r2 = rand(vec2(posFrom.w, offsetPos.y));
+  r1 = r1 * (bbox.y - bbox.x) + bbox.x;
+  r2 = r2 * (bbox.w - bbox.z) + bbox.z;
+  vec2 randValues = vec2(r1, r2);
+
+  // endPos = vec4(offsetPos, randValues);
+  endPos.xy = mix(offsetPos, randValues, float(offsetPos.x < bbox.x || offsetPos.x > bbox.y || offsetPos.y < bbox.z || offsetPos.y > bbox.w));
+  endPos.xy = mix(endPos.xy, randValues, float(length(offset) < EPSILON));
+  endPos.xy = mix(endPos.xy, randValues, abs(flip - posFrom.z) < EPSILON ? 1. : 0.);
 
   gl_Position = endPos;
 }

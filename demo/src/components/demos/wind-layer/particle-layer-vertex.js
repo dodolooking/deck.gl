@@ -72,17 +72,17 @@ void main(void) {
   vec2 coord = vec2(x, 1. - y);
   vec4 texel = mix(texture2D(dataFrom, coord), texture2D(dataTo, coord), delta);
   
-  float wind = (texel.y - bounds1.x) / (bounds1.y - bounds1.x) * 2.;
+  float wind = (texel.y - bounds1.x) / (bounds1.y - bounds1.x) * 1.;
 
   vec2 p = preproject(posFrom.xy);
-  gl_PointSize = 2.;
+  gl_PointSize = 3.;
   vec2 pos = project_position(posFrom.xy);
   float elevation = project_scale((texel.w + 100.) * ELEVATION_SCALE);
   vec3 extrudedPosition = vec3(pos.xy, elevation + 1.0);
   vec4 position_worldspace = vec4(extrudedPosition, 1.0);
   gl_Position = project_to_clipspace(position_worldspace);
 
-  float alpha = mix(0., 0.8, pow(wind, .7));
+  float alpha = mix(0., 0.8, pow(wind, 1.3));
   // temperature in 0-1
   float temp = (texel.z - bounds2.x) / (bounds2.y - bounds2.x);  
   temp = floor(temp * 3.) / 3.;
