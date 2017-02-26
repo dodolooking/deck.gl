@@ -203,6 +203,28 @@ export default class DelaunayInterpolation {
         width = this.getTextureWidth(),
         height = Math.ceil(latDiff * width / lngDiff),
         bounds = [],
+        correctAngles = (angle1, angle2, angle3) => {
+          //return [angle1, angle2, angle3];
+          const abs = Math.abs.bind(Math);
+          const modulo = 8;
+          let flip = false;
+          if (abs(angle1 - angle2) > abs(angle1 - (angle2 + modulo))) {
+            flip = true;
+          }
+          if (abs(angle1 - angle3) > abs(angle1 - (angle3 + modulo))) {
+            if (flip) {
+              // need to flip angle1
+              angle1 -= modulo;
+            } else {
+              // need to flip angle3
+              angle3 += modulo;
+            }
+          } else if (flip) {
+            // need to flip angle2
+            angle2 += modulo;
+          }
+          return [angle1, angle2, angle3];
+        },
         {fb, rb, txt} = this.createFramebufferWithTexture(gl, {
           fb: {width, height},
           rb: {width, height},
@@ -248,16 +270,22 @@ export default class DelaunayInterpolation {
           });
         }
 
-        sample.push(
+        const [angle1, angle2, angle3] = correctAngles(
           measure[triplet[0].index][0],
+          measure[triplet[1].index][0],
+          measure[triplet[2].index][0]
+        );
+
+        sample.push(
+          angle1,
           measure[triplet[0].index][1],
           measure[triplet[0].index][2],
 
-          measure[triplet[1].index][0],
+          angle2,
           measure[triplet[1].index][1],
           measure[triplet[1].index][2],
 
-          measure[triplet[2].index][0],
+          angle3,
           measure[triplet[2].index][1],
           measure[triplet[2].index][2]
         );

@@ -332,6 +332,9 @@ float getLightWeight(vec4 position_worldspace, vec3 normals_worldspace) {
 }
 
 void main(void) {
+  if (vColor.a == 0.) {
+    discard;
+  }
   float lightWeight = getLightWeight(vPosition, vNormal.xyz);
   gl_FragColor = vec4(vColor.xyz * lightWeight, 1);
 }

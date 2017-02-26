@@ -22,7 +22,7 @@ export default class WindLayer extends Layer {
     const {gl} = this.context;
     const {attributeManager} = this.state;
     const {bbox, texData, time} = this.props;
-    const model = this.getModel(gl, bbox, 100, 50, texData);
+    const model = this.getModel(gl, bbox, 80, 30, texData);
 
     this.setState({model, texData});
   }
@@ -63,7 +63,6 @@ export default class WindLayer extends Layer {
 
     this.state.numInstances = instances;
     // build lines for the vector field
-    // TODO(nico): this should be computed only once
     for (let i = 0; i < nx; ++i) {
       for (let j = 0; j < ny; ++j) {
         let index = (i + j * nx) * 3;
@@ -134,12 +133,12 @@ export default class WindLayer extends Layer {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, textureFrom);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT,
-          textureArray[(model.props && model.props.timeInt || timeInt) + 1], 0);
+          textureArray[(model.props && model.props.timeInt || timeInt)], 0);
 
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, textureTo);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT,
-         textureArray[model.props && model.props.timeInt || timeInt], 0);
+         textureArray[(model.props && model.props.timeInt || timeInt) + 1], 0);
 
         gl.clearDepth(1.0);
         gl.enable(gl.DEPTH_TEST);

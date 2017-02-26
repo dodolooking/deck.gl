@@ -28,7 +28,13 @@ precision highp float;
 varying vec4 vColor;
 
 void main(void) {
+  if (vColor.a < 0.07) {
+  	discard;
+  }
+  vec2 diff = gl_PointCoord - vec2(.5);
+  if (length(diff) > 0.5) {
+    discard;
+  }
   gl_FragColor = vColor;
-  // gl_FragColor = vec4(1);
 }
 `;

@@ -72,14 +72,14 @@ export default class ParticleLayer extends Layer {
       for (let j = 0; j < ny; ++j) {
         let index4 = (i + j * nx) * 4;
         let index3 = (i + j * nx) * 3;
-        positions3[index3 + 0] = randLng();
-        positions3[index3 + 1] = randLat();
-        positions3[index3 + 2] = i + j * nx;
+        positions3[index3 + 0] = 0;
+        positions3[index3 + 1] = 0;
+        positions3[index3 + 2] = Math.random() * nx;
 
         positions4[index4 + 0] = i * spanX + bbox.minLng;
         positions4[index4 + 1] = j * spanY + bbox.minLat;
-        positions4[index4 + 2] = i + j * nx;
-        positions4[index4 + 3] = randLat();
+        positions4[index4 + 2] = -1;
+        positions4[index4 + 3] = -1;
       }
     }
 
@@ -116,11 +116,12 @@ export default class ParticleLayer extends Layer {
       isInstanced: false,
       onBeforeRender: () => {
         let time = Date.now() - now;
-        let flip = time > 100 ? 1 : -1;
+        let flip = time > 500 ? 1 : -1;
         if (flip > 0) {
-          counter = (counter + 1) % dim;
+          // counter = (counter + 1) % nx;
+          counter = (counter + 1) % 10;
           flip = counter;
-          console.log(flip);
+          // console.log(flip);
         }
         // set uniforms
         modelTF.program.setUniforms({
@@ -209,6 +210,7 @@ export default class ParticleLayer extends Layer {
         });
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+        // gl.blendEquation(gl.MAX);
         // upload texture (data) before rendering
         gl.bindTexture(gl.TEXTURE_2D, textureFrom);
         gl.activeTexture(gl.TEXTURE0);

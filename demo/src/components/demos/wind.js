@@ -51,7 +51,7 @@ static done(owner, data) {
         bbox,
         triangulation,
         measures: data[1],
-        textureWidth: 1024
+        textureWidth: 512
       }).generateTextures()
     };
   }
@@ -123,7 +123,6 @@ static done(owner, data) {
 
     const {derived} = data;
     const {triangulation, texData, bbox} = derived;
-    // console.log(params.time.value);
     const layers = [].concat(
       data[0] && new ScatterplotLayer({
         id: 'stations',
