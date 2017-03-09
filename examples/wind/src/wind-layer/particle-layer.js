@@ -7,6 +7,7 @@ import fragment from './particle-layer-fragment.js';
 import vertexTF from './transform-feedback-vertex.js';
 import fragmentTF from './transform-feedback-fragment.js';
 import DelaunayInterpolation from './delaunay-interpolation.js'
+import {ELEVATION_DATA_IMAGE, ELEVATION_DATA_BOUNDS, ELEVATION_RANGE} from '../defaults';
 
 export default class ParticleLayer extends Layer {
 
@@ -24,24 +25,38 @@ export default class ParticleLayer extends Layer {
   initializeState() {
     const {gl} = this.context;
     const {attributeManager} = this.state;
-    const {bbox, texData} = this.props;
+    const {bbox, texData, originalBBox} = this.props;
     const {model, modelTF} = this.getModel(gl, bbox, 1200, 600, texData);
+    const data = {};
 
-    this.setState({model, modelTF, texData});
+    const image = new Image(584, 253);
+    image.onload = () => {
+      data.img = image;
+    };
+    image.src = ELEVATION_DATA_IMAGE;
+
+    this.setState({model, modelTF, texData, data});
   }
 
   createTexture(gl, opt) {
+    let options = {
+      data: {
+        format: gl.RGBA,
+        value: false,
+        type: opt.type || gl.FLOAT,
+        internalFormat: opt.internalFormat || gl.RGBA32F,
+        width: opt.width,
+        height: opt.height,
+        border: 0
+      }
+    };
+
+    if (opt.parameters) {
+      options.parameters = opt.parameters;
+    }
+
     return new DelaunayInterpolation({gl})
-      .createTexture(gl, {
-          data: {
-            format: gl.RGBA,
-            value: false,
-            type: gl.FLOAT,
-            width: opt.width,
-            height: opt.height,
-            border: 0
-          }
-        });
+      .createTexture(gl, options);
   }
 
   getModel(gl, bbox, nx, ny, texData) {
@@ -52,6 +67,27 @@ export default class ParticleLayer extends Layer {
         textureTo = this.createTexture(gl, {width, height}),
         diffX = bbox.maxLng - bbox.minLng,
         diffY = bbox.maxLat - bbox.minLat,
+        elevationWidth = 584,
+        elevationHeight = 253,
+        elevationTexture = this.createTexture(gl, {
+          width: elevationWidth,
+          height: elevationHeight,
+          type: gl.RGBA,
+          internalFormat: gl.RGBA,
+          parameters: [{
+            name: gl.TEXTURE_MAG_FILTER,
+            value: gl.LINEAR
+          }, {
+            name: gl.TEXTURE_MIN_FILTER,
+            value: gl.LINEAR
+          }, {
+            name: gl.TEXTURE_WRAP_S,
+            value: gl.CLAMP_TO_EDGE
+          }, {
+            name: gl.TEXTURE_WRAP_T,
+            value: gl.CLAMP_TO_EDGE
+          }]
+        }),
         spanX = diffX / (nx - 1),
         spanY = diffY / (ny - 1),
         dim = nx * ny,
@@ -62,8 +98,7 @@ export default class ParticleLayer extends Layer {
         tf = gl.createTransformFeedback(),
         timeInt = 0,
         delta = 0,
-        randLng = () => (bbox.maxLng - bbox.minLng) * Math.random() + bbox.minLng,
-        randLat = () => (bbox.maxLat - bbox.minLat) * Math.random() + bbox.minLat;
+        state = this.state;
 
     this.state.numInstances = dim;
 
@@ -206,7 +241,10 @@ export default class ParticleLayer extends Layer {
           color1: [255, 255, 174].map(d => d / 255),
           color2: [241, 85, 46].map(d => d / 255),
           dataFrom: 0,
-          dataTo: 1
+          dataTo: 1,
+          elevationTexture: 2,
+          elevationBounds: ELEVATION_DATA_BOUNDS,
+          elevationRange: ELEVATION_RANGE
         });
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
@@ -220,6 +258,14 @@ export default class ParticleLayer extends Layer {
         gl.activeTexture(gl.TEXTURE1);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[(model.props && model.props.timeInt || timeInt) + 1], 0);
         
+        if (state.data && state.data.img) {
+          gl.bindTexture(gl.TEXTURE_2D, null);
+          gl.bindTexture(gl.TEXTURE_2D, elevationTexture);
+          gl.activeTexture(gl.TEXTURE2);
+          gl.bindTexture(gl.TEXTURE_2D, elevationTexture);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, elevationWidth, elevationHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, state.data.img);
+        }
+
         let loc = model.program._attributeLocations['posFrom'];
         gl.bindBuffer(gl.ARRAY_BUFFER, bufferTo);
         gl.enableVertexAttribArray(loc);
