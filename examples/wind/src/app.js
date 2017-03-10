@@ -24,15 +24,15 @@ class Root extends Component {
       viewport: {
         width: 500,
         height: 500,
-        longitude: -100,
-        latitude: 40.7,
-        zoom: 3.8,
+        longitude: -98.31907156932937,
+        latitude: 37.613897372628045,
+        zoom: 4.241754140284522,
         maxZoom: 16,
-        pitch: 0,
-        bearing: 0
+        pitch: 37.11535300402728,
+        bearing: -0.6424747174301046
       },
       params: {
-        time: 0,
+        time: 55.6,
         toggleParticles: true,
         toggleWind: true,
         toggleElevation: true
@@ -88,6 +88,8 @@ class Root extends Component {
         <div className="control-panel">
           <h1>Wind</h1>
           <p>Visualize wind on vector fields and particles.</p>
+          <p>Use <b>cmd + drag</b> to change the map view.</p>
+          <p>A <a href="http://deck.gl">deck.gl</a> demo by <a href="https://twitter.com/philogb">@philogb</a>.</p>
           <p>Data source: <a href="http://www.census.gov">NCAA</a></p>
 
           <hr />

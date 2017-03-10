@@ -55,6 +55,10 @@ export default class ParticleLayer extends Layer {
       options.parameters = opt.parameters;
     }
 
+    if (opt.texture) {
+      options.texture = opt.texture;
+    }
+
     return new DelaunayInterpolation({gl})
       .createTexture(gl, options);
   }
@@ -177,12 +181,14 @@ export default class ParticleLayer extends Layer {
         }
 
         // upload texture (data) before rendering
-        gl.bindTexture(gl.TEXTURE_2D, textureFrom);
+        // gl.bindTexture(gl.TEXTURE_2D, textureFrom);
         gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, textureFrom);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[model.props && model.props.timeInt || timeInt], 0);
         
-        gl.bindTexture(gl.TEXTURE_2D, textureTo);
+        // gl.bindTexture(gl.TEXTURE_2D, textureTo);
         gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, textureTo);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[(model.props && model.props.timeInt || timeInt) + 1], 0);
         // setup transform feedback
         gl.enable(gl.RASTERIZER_DISCARD);
@@ -249,47 +255,28 @@ export default class ParticleLayer extends Layer {
         });
 
         gl.enable(gl.BLEND);
+        // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-        // gl.blendEquation(gl.MAX);
 
         // upload texture (data) before rendering
-        gl.bindTexture(gl.TEXTURE_2D, textureFrom);
+        // gl.bindTexture(gl.TEXTURE_2D, textureFrom);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, textureFrom);
-        textureFrom = that.createTexture(gl, {width, height, texture: textureFrom});
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[model.props && model.props.timeInt || timeInt], 0);
         
-        gl.bindTexture(gl.TEXTURE_2D, textureTo);
+        // gl.bindTexture(gl.TEXTURE_2D, textureTo);
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, textureTo);
-        textureTo = that.createTexture(gl, {width, height, texture: textureTo});
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[(model.props && model.props.timeInt || timeInt) + 1], 0);
 
-        if (state.data && state.data.img) {
-          gl.bindTexture(gl.TEXTURE_2D, elevationTexture);
+        if (state.data) {
+          // gl.bindTexture(gl.TEXTURE_2D, elevationTexture);
           gl.activeTexture(gl.TEXTURE2);
           gl.bindTexture(gl.TEXTURE_2D, elevationTexture);
-          elevationTexture = that.createTexture(gl, {
-            texture: elevationTexture,
-            width: elevationWidth,
-            height: elevationHeight,
-            type: gl.RGBA,
-            internalFormat: gl.RGBA,
-            parameters: [{
-              name: gl.TEXTURE_MAG_FILTER,
-              value: gl.LINEAR
-            }, {
-              name: gl.TEXTURE_MIN_FILTER,
-              value: gl.LINEAR
-            }, {
-              name: gl.TEXTURE_WRAP_S,
-              value: gl.CLAMP_TO_EDGE
-            }, {
-              name: gl.TEXTURE_WRAP_T,
-              value: gl.CLAMP_TO_EDGE
-            }]
-          });
-          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, elevationWidth, elevationHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, state.data.img);
+          if (state.data.img) {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, elevationWidth, elevationHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, state.data.img);
+            state.data.img = false;
+          }
         }
 
         // gl.bindTexture(gl.TEXTURE_2D, null);

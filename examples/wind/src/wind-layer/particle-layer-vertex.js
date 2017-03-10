@@ -78,6 +78,6 @@ void main(void) {
   }
   // temperature in 0-1
   float temp = (texel.z - bounds2.x) / (bounds2.y - bounds2.x);  
-  vColor = vec4(vec3(0.6), alpha);
+  vColor = vec4(vec3(0.8), alpha);
 }
 `;
