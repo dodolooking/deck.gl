@@ -109,7 +109,7 @@ export default class DelaunayInterpolation {
 
     let textureType = opt.textureType,
         textureTarget = textureType,
-        texture = gl.createTexture(),
+        texture = options.texture || gl.createTexture(),
         pixelStore = opt.pixelStore,
         parameters = opt.parameters,
         data = opt.data,

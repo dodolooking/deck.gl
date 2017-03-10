@@ -98,6 +98,7 @@ export default class ParticleLayer extends Layer {
         tf = gl.createTransformFeedback(),
         timeInt = 0,
         delta = 0,
+        that = this,
         state = this.state;
 
     this.state.numInstances = dim;
@@ -246,32 +247,58 @@ export default class ParticleLayer extends Layer {
           elevationBounds: ELEVATION_DATA_BOUNDS,
           elevationRange: ELEVATION_RANGE
         });
+
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
         // gl.blendEquation(gl.MAX);
+
         // upload texture (data) before rendering
         gl.bindTexture(gl.TEXTURE_2D, textureFrom);
         gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, textureFrom);
+        textureFrom = that.createTexture(gl, {width, height, texture: textureFrom});
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[model.props && model.props.timeInt || timeInt], 0);
         
         gl.bindTexture(gl.TEXTURE_2D, textureTo);
         gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, textureTo);
+        textureTo = that.createTexture(gl, {width, height, texture: textureTo});
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, textureArray[(model.props && model.props.timeInt || timeInt) + 1], 0);
-        
+
         if (state.data && state.data.img) {
-          gl.bindTexture(gl.TEXTURE_2D, null);
           gl.bindTexture(gl.TEXTURE_2D, elevationTexture);
           gl.activeTexture(gl.TEXTURE2);
           gl.bindTexture(gl.TEXTURE_2D, elevationTexture);
+          elevationTexture = that.createTexture(gl, {
+            texture: elevationTexture,
+            width: elevationWidth,
+            height: elevationHeight,
+            type: gl.RGBA,
+            internalFormat: gl.RGBA,
+            parameters: [{
+              name: gl.TEXTURE_MAG_FILTER,
+              value: gl.LINEAR
+            }, {
+              name: gl.TEXTURE_MIN_FILTER,
+              value: gl.LINEAR
+            }, {
+              name: gl.TEXTURE_WRAP_S,
+              value: gl.CLAMP_TO_EDGE
+            }, {
+              name: gl.TEXTURE_WRAP_T,
+              value: gl.CLAMP_TO_EDGE
+            }]
+          });
           gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, elevationWidth, elevationHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, state.data.img);
         }
 
+        // gl.bindTexture(gl.TEXTURE_2D, null);
+        
         let loc = model.program._attributeLocations['posFrom'];
         gl.bindBuffer(gl.ARRAY_BUFFER, bufferTo);
         gl.enableVertexAttribArray(loc);
         gl.vertexAttribPointer(loc, 4, gl.FLOAT, gl.FALSE, 0, 0);
         gl.vertexAttribDivisor(loc, 0);
-        // gl.bindBuffer(gl.ARRAY_BUFFER, null);
       },
       onAfterRender: () => {
         // let loc = model.program._attributeLocations['posFrom'];
