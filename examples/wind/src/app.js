@@ -32,7 +32,7 @@ class Root extends Component {
         bearing: -0.6424747174301046
       },
       params: {
-        time: 55.6,
+        time: 30.4,
         toggleParticles: true,
         toggleWind: true,
         toggleElevation: true
